@@ -72,7 +72,8 @@
                                   (syntax->list #'(str str* ...))))
                       (list (syntax-source #'str)
                             line col pos
-                            (syntax-span #'str)))
+                            (syntax-span #'str))
+                       #'str)
                      #'str)
                  ip)])
            ;(display "result: ") (display result) (newline)
