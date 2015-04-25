@@ -2,7 +2,7 @@
 (define name "Infix Expressions")
 (define blurb
   (list "Infix Expressions: Write mathematical expressions with standard syntax."))
-;(define scribblings '(["scribblings/manual.scrbl"]))
+(define scribblings '(["scribblings/infix-manual.scrbl"]))
 (define categories '(devtools))
 (define version "1.1")
 (define primary-file "main.rkt")
