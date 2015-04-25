@@ -9,7 +9,7 @@
            "../main.ss")
           "util.ss")
 
-@title[#:tag "top"]{@bold{Infix Expressions} for PLT Scheme}
+@title[#:tag "top"]{@bold{Infix Expressions} for Racket}
 @author[(author+email "Jens Axel Søgaard" "jensaxel@soegaard.net")]
 
 This package provides infix notation for writing mathematical expressions.
@@ -19,9 +19,9 @@ This package provides infix notation for writing mathematical expressions.
 A simple example, calculating 1+2*3.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
-(display (format "1+2*3 is ~a\n" @${1+2*3} )
+($ "1+2*3")
 }|
 
 @subsection{Arithmetical Operations}
@@ -30,19 +30,19 @@ The arithmetical operations +, -, *, / and ^ is written with standard
 mathematical notation. Normal parentheseses are used for grouping.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
-@${2*(1+3^4)}   ; evaluates to 164
+($"2*(1+3^4)")   ; evaluates to 164
 }|
 
 @subsection{Identifiers}
 Identifiers refer to the current lexical scope:
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
 (define x 41)
-@${ x+1 }   ; evaluates to 42
+($"x+1")   ; evaluates to 42
 }|
 
 @subsection{Application}
@@ -52,10 +52,10 @@ Here @scheme[sqrt] is bound to the square root function defined
 in the language after at-exp, here the racket language.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
-(display (format "The square root of 64 is ~a\n" @${sqrt[64]} ))
-@${ list[1,2,3] }  evaluates to the list (1 2 3)
+(display (format "The square root of 64 is ~a\n" ($"sqrt[64]")))
+($"list[1,2,3]") ; evaluates to the list (1 2 3)
 }|
 
 @subsection{Lists}
@@ -63,9 +63,9 @@ in the language after at-exp, here the racket language.
 Lists are written with curly brackets {}.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
-@${ {1,2,1+2} }  ; evaluates to (1 2 3)
+($"{1,2,1+2}")  ; evaluates to (1 2 3)
 }|
 
 
@@ -74,10 +74,10 @@ Lists are written with curly brackets {}.
 List reference is written with double square brackets.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
 (define xs '(a b c))
-@${ xs[[1]] }  ; evaluates to b
+($"xs[[1]]")  ; evaluates to b
 }|
 
 @subsection{Anonymous Functions}
@@ -87,12 +87,12 @@ of identifiers evaluates to function in which the ids are bound in
 body expressions.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
   
-@${ (λ.1)[]}           ; evaluates to 1 
-@${ (λx.x+1)[2]}       ; evaluates to 3
-@${ (λx y.x+y+1)[1,2]} ; evaluates to 4
+($" (λ.1)[] ")          ; evaluates to 1 
+($" (λx.x+1)[2]")       ; evaluates to 3
+($" (λx y.x+y+1)[1,2]") ; evaluates to 4
 }|
 
 @subsection{Square Roots}
@@ -100,10 +100,10 @@ body expressions.
 Square roots can be written with a literal square root:
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
-@${√4}     ; evaluates to 2
-@${√(2+2)} ; evaluates to 2
+($"√4")     ; evaluates to 2
+($"√(2+2)")  ; evaluates to 2
 }|
 
 @subsection{Comparisons}
@@ -115,10 +115,11 @@ Inequality is tested with <>.
 Logical negations is written as ¬.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
-@${ ¬true }      ; evaluates to #f
-@${ ¬(1<2) }   ; evaluates to #f
+(define true #t)
+($"¬true")      ; evaluates to #f
+($"¬(1<2)")     ; evaluates to #f
 }|
 
 @subsection{Assignment}
@@ -129,10 +130,10 @@ A series of expresions can be evaluated by interspersing semi colons
 between the expressions.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix)
 (define x 0)
-@${ (x:=1); (x+3) }  ; evaluates to 4
+($" x:=1 ;  x+3 ")  ; evaluates to 4
 }|
 
 @section{Examples}
@@ -150,18 +151,32 @@ Find the sum of all the even-valued terms in the sequence which do not
 exceed four million.
 
 @verbatim[#:indent 2]|{
-#lang at-exp racket
+#lang racket
 (require infix "while.rkt")
 
 (define-values (f g t) (values 1 2 0))
 (define sum f)
-@${ 
+($" 
 while[ g< 4000000,
   when[ even?[g], sum:=sum+g];
   t := f + g;
   f := g;
   g := t];
-sum}|
+sum")}|
+
+Here "while.rkt" is a file with this contents:
+@verbatim[#:indent 2]|{
+#lang racket
+(provide while)
+; SYNTAX (while expr body ...)
+;   1. evaluate expr
+;   2. if expr was true then evaluate body ... and go to 1.
+;   3. return (void)
+(require (for-syntax syntax/parse))
+(define-syntax (while stx)
+  (syntax-parse stx
+    [(_while expr body ...)
+     #'(let loop () (when expr body ... (loop)))]))}|
 
 @subsection{Example: Difference Between a Sum of Squares and the Square of a Sum}
 
@@ -195,6 +210,8 @@ while[ n<100,
 ns^2-squares
 }
 }|
+
+The example above also shows that Scribble syntax can be used.
 
 @subsection{Example: Pythagorean Triplets}
 
