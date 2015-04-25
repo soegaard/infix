@@ -5,5 +5,5 @@
 
 (define the-eval
   (let ([the-eval (make-base-eval)])
-    (the-eval `(require "../main.rkt"))
+    (the-eval `(require infix))
     the-eval))
