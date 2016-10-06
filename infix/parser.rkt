@@ -60,7 +60,26 @@
 (define-lex-abbrevs
   [letter     (:or (:/ "a" "z") (:/ #\A #\Z) )]
   [digit      (:/ #\0 #\9)]
-  [string     (:: #\" (:* (:or letter digit #\_ #\?)) #\")]
+  [odigit      (:/ #\0 #\7)]
+  [hdigit      (:or (:/ #\0 #\9) (:/ #\a #\f) (:/ #\A #\F))]
+  [string     (:: #\" (:* (:~ #\" #\\)
+                          (:: #\\ #\\)
+                          (:: #\\ #\")
+                          (:: #\\ #\')
+                          (:: #\\ #\a)
+                          (:: #\\ #\b)
+                          (:: #\\ #\t)
+                          (:: #\\ #\n)
+                          (:: #\\ #\r)
+                          (:: #\\ #\v)
+                          (:: #\\ #\f)
+                          (:: #\\ #\e)
+                          (:: #\\ #\newline)
+                          (:: #\\ (:** 1 3 odigit))
+                          (:: #\\ #\x (:** 1 2 hdigit))
+                          (:: #\\ #\u (:** 1 4 hdigit))
+                          (:: #\\ #\U (:** 1 8 hdigit)))
+                  #\")]
   [identifier (:: letter (:* (:or letter digit #\_ #\?)))])
 
 (define expression-lexer
@@ -92,7 +111,7 @@
    ["<>" 'NOT-EQUAL]
    ["≠" 'NOT-EQUAL]
    [string 
-    (token-STRING (substring lexeme 1 (- (string-length lexeme) 1)))]
+    (token-STRING (read (open-input-string lexeme)))]
    [identifier 
     (token-IDENTIFIER (string->symbol (regexp-replace* #rx"_" lexeme "-")))]
    [(:+ digit) (token-NUMBER (string->number lexeme))]
