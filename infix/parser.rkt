@@ -133,10 +133,10 @@
                                              (syntax->datum #'end))))])
        ; Note: (datum->syntax ctxt v srcloc prop ignored)
        #`(let ()
-           (displayln (list 'build #'o value #'start-pos #'end-pos)
+           #;(displayln (list 'build #'o value #'start-pos #'end-pos)
                       (current-error-port))
-           (displayln (list 'from-o (syntax-line o) (syntax-column o) (syntax-position o)))
-           (displayln 
+           #;(displayln (list 'from-o (syntax-line o) (syntax-column o) (syntax-position o)))
+           #;(displayln 
             (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
                   (if o (+ (syntax-line o)     (position-line   start-pos)   -1) #f)
                   (if o (+ (syntax-column o)   (position-offset start-pos)     ) #f)
