@@ -1,4 +1,4 @@
-#lang scheme
+#lang racket
 (require "parameter.rkt")
 
 ;;; NOTES: 
@@ -123,23 +123,51 @@
   (syntax-case stx ()
     ((_ o value start end)
      (with-syntax 
-         ((start-pos (datum->syntax #'start
+         ([start-pos (datum->syntax #'start
                                     (string->symbol 
                                      (format "$~a-start-pos"
-                                             (syntax->datum #'start)))))
-          (end-pos (datum->syntax #'end
-                                  (string->symbol 
-                                   (format "$~a-end-pos" 
-                                           (syntax->datum #'end))))))
-       #`(datum->syntax o
-                        value
-                        (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
-                              (if o (+ (syntax-line o) (position-line start-pos) -1) #f)
-                              (if o (+ (syntax-column o) (position-offset start-pos) ) #f)
-                              (if o (+ (syntax-position o) (position-offset start-pos)) #f)
-                              (- (position-offset end-pos)
-                                 (position-offset start-pos)))
-                        o o)))))
+                                             (syntax->datum #'start))))]
+          [end-pos   (datum->syntax #'end
+                                    (string->symbol 
+                                     (format "$~a-end-pos" 
+                                             (syntax->datum #'end))))])
+       ; Note: (datum->syntax ctxt v srcloc prop ignored)
+       #`(let ()
+           (displayln (list 'build #'o value #'start-pos #'end-pos)
+                      (current-error-port))
+           (displayln (list 'from-o (syntax-line o) (syntax-column o) (syntax-position o)))
+           (displayln 
+            (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
+                  (if o (+ (syntax-line o)     (position-line   start-pos)   -1) #f)
+                  (if o (+ (syntax-column o)   (position-offset start-pos)     ) #f)
+                  (if o (+ (syntax-position o) (position-offset start-pos)     ) #f)
+                  ; span:
+                  (- (position-offset end-pos) (position-offset start-pos))))
+           (datum->syntax o
+                          value
+                          ; Warning: DrRacket shows character offsets (from 0) in the 
+                          ;          status line, not character positions ... [sigh]
+                          ; position and line numbers count from 1                          
+                          ; column numbers count from 0
+                          (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
+                                (if o (+ (syntax-line o)     (position-line   start-pos)   -1) #f)
+                                (if o (+ (syntax-column o)   (position-offset start-pos)     ) #f)
+                                (if o (+ (syntax-position o) (position-offset start-pos)     ) #f)
+                                ; span:
+                                (- (position-offset end-pos) (position-offset start-pos)))
+                          o o))))))
+;; A macro to build the syntax object
+;;; Example:
+;   (power-exp 
+;     [(application-exp ^ power-exp) (prec ^)           (b o `(expt ,$1 ,$3) 1 3)]
+;   ...)
+; If the expression matches the clause $1 contains the result of parsing application-exp
+; and $3 contains the result of the parsing power-exp.
+; The new expressions is `(expt ,$1 ,$2). 
+; The source location for the new expression begins where $1 starts and stops where $3 ends.
+; The final 1 3 is used to generate the start and end locations for $1 and $2.
+; Finally the object o is used as the syntax-source (it is typically a file path string).
+
 
 ; for testing: builds lists instead of syntax objects
 #;(define-syntax (b stx)
@@ -161,9 +189,10 @@
    (end newline EOF)
    (tokens value-tokens op-tokens)
    (error (lambda (token-ok? name val start end)
-            ; The first argument will be #f if and only if the error is that an invalid token was received. 
-            ; The second and third arguments will be the name and the value of the token at which the error was detected. 
-            ; The fourth and fifth arguments, if present, provide the source positions of that token.
+            ; The first argument will be #f if and only if the error is that an invalid 
+            ; token was received. The second and third arguments will be the name and the value 
+            ; of the token at which the error was detected. 
+            ; The fourth and fifth arguments, if present, provide the source positions of that
             (unless #f #; (string? (syntax->datum o))
               (display "DEBUG: ")
               (display (list o token-ok? name val start end))
@@ -182,7 +211,7 @@
                   (begin
                     (display o)
                     (newline)
-                    "fooooooooo"))
+                    "internal error in package 'infix' - please file bug report"))
               (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
                     (if o (+ (syntax-line o)     (position-line start) -1) #f)
                     (if o (+ (syntax-column o)   (position-offset start))  #f)
@@ -227,8 +256,8 @@
      [(atom)                                        $1])
     
     (application-exp
-     [(application-exp OB args CB)                              (b o `(,$1 ,@$3) 1 4)]                     ; function application
-     [(application-exp ODB exp CB CB)                             (b o `(,(b o 'list-ref 1 4) ,$1 ,$3) 1 4)] ; list ref
+     [(application-exp OB args CB)              (b o `(,$1 ,@$3) 1 4)]    ; function application
+     [(application-exp ODB exp CB CB)           (b o `(,(b o 'list-ref 1 4) ,$1 ,$3) 1 4)] ; list ref
      [(construction-exp)                            $1])
 
     #;(implicit-exp
@@ -259,12 +288,12 @@
      [(multiplication-exp)                          $1])
     
     (order-exp
-     [(addition-exp LESS-EQUAL addition-exp)    (prec =)  (b o `(,(b o '<= 2 2) ,$1 ,$3) 1 3)]
-     [(addition-exp < addition-exp)             (prec =)  (b o `(,(b o '< 2 2) ,$1 ,$3) 1 3)]
-     [(addition-exp GREATER-EQUAL addition-exp) (prec =)  (b o `(,(b o '>= 2 2) ,$1 ,$3) 1 3)]
-     [(addition-exp > addition-exp)             (prec =)  (b o `(,(b o '> 2 2) ,$1 ,$3) 1 3)]
-     [(addition-exp NOT-EQUAL addition-exp)     (prec =)  (b o `(not (,(b o '= 2 2) ,$1 ,$3)) 1 3)]
-     [(addition-exp = addition-exp)             (prec =)  (b o `(,(b o '= 2 2) ,$1 ,$3) 1 3)]
+     [(addition-exp LESS-EQUAL addition-exp)    (prec =)  (b o      `(,(b o '<= 2 2) ,$1 ,$3)  1 3)]
+     [(addition-exp < addition-exp)             (prec =)  (b o      `(,(b o '<  2 2) ,$1 ,$3)  1 3)]
+     [(addition-exp GREATER-EQUAL addition-exp) (prec =)  (b o      `(,(b o '>= 2 2) ,$1 ,$3)  1 3)]
+     [(addition-exp > addition-exp)             (prec =)  (b o      `(,(b o '>  2 2) ,$1 ,$3)  1 3)]
+     [(addition-exp NOT-EQUAL addition-exp)     (prec =)  (b o `(not (,(b o '=  2 2) ,$1 ,$3)) 1 3)]
+     [(addition-exp = addition-exp)             (prec =)  (b o      `(,(b o '=  2 2) ,$1 ,$3)  1 3)]
      [(addition-exp)                            $1])
     
     (logical-negation-exp
@@ -272,7 +301,7 @@
      [(order-exp)                                  $1])
     
     (assignment-exp
-     [(IDENTIFIER := assignment-exp)                  (b o `(,(b o 'set! 2 2) ,$1 ,$3) 1 3)]
+     [(IDENTIFIER := assignment-exp)                  (b o `(,(b o 'set!   2 2)  ,$1 ,$3)      1 3)]
      [(IDENTIFIER OP IDENTIFIER CP := assignment-exp) (b o `(,(b o 'define 3 3) (,$1 ,$3) ,$6) 1 6)]
      [(logical-negation-exp)                          $1])
     
@@ -302,7 +331,7 @@
 (define parse-math-string
   (case-lambda 
     [(s)     
-     (display (format "~a\n" s))
+     ; (display (list 'parse-math-string (format "~a\n" s)))
      (parse-math-string s (let ([here #'here]) (datum->syntax here s here)))]
     [(s src) 
      (cond 
