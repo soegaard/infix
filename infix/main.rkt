@@ -1,4 +1,4 @@
-#lang at-exp scheme
+#lang at-exp racket
 ;; This is not in the use for the moment.
 (provide $ $quote $quote-syntax #%infix)
 
@@ -59,23 +59,36 @@
        ;(display "stx: ") (display stx) (newline)
        (port-count-lines! ip)
        (let* ([line (syntax-line #'str)]
-              [col  (+ (syntax-column #'str) offset)]
-              [pos  (+ (syntax-position #'str) offset -1)])
-         ;(display (list line col pos)) (newline)
+              [col  (+ (syntax-column   #'str) offset   )]   ; counts from 0
+              [pos  (+ (syntax-position #'str) offset -1)])  ; counts from 1
+         ;(display (list '$$ line col pos)) (newline)
+         ; The string str has the position of the first "
+         ; We need to skip this.
+         ; This is ignored?? if uncommented
+         ;  (define-values (l c p) (port-next-location ip))
+         ;  (set-port-next-location! ip l (+ c 10) p)
          (let ([result
                 (parse-expression 
                  (if from-at?
-                     (datum->syntax 
-                      #'str
-                      (apply string-append
-                             (map syntax->datum 
-                                  (syntax->list #'(str str* ...))))
+                     (datum->syntax #'str
+                                    (apply string-append
+                                           (map syntax->datum 
+                                                (syntax->list #'(str str* ...))))
+                                    (list (syntax-source #'str)
+                                          line col pos
+                                          (syntax-span #'str))
+                                    #'str)
+                     ; This object is only used for its source location information
+                     (datum->syntax
+                      #'str 
+                      (syntax-e #'str) ; needs to be a datum otherwise the source location info 
+                      ;                  is ignored by datum->syntax
                       (list (syntax-source #'str)
-                            line col pos
-                            (syntax-span #'str))
-                       #'str)
-                     #'str)
+                                        (syntax-line #'str)
+                                        (+ (syntax-column #'str) -1)
+                                        (syntax-position #'str)
+                                        (syntax-span #'str))
+                      #'str))
                  ip)])
            ;(display "result: ") (display result) (newline)
            result)))]))
-
