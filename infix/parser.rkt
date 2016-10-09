@@ -1,5 +1,6 @@
 #lang racket
-(require "parameter.rkt")
+(require "parameter.rkt"
+         "parse-string-lexeme.rkt")
 
 ;;; NOTES: 
 ;;;   Changes from planet version:  ]] (CDB) Bug fixed
@@ -60,8 +61,10 @@
 (define-lex-abbrevs
   [letter     (:or (:/ "a" "z") (:/ #\A #\Z) )]
   [digit      (:/ #\0 #\9)]
-  [odigit      (:/ #\0 #\7)]
-  [hdigit      (:or (:/ #\0 #\9) (:/ #\a #\f) (:/ #\A #\F))]
+  [odigit     (:/ #\0 #\7)]
+  [hdigit     (:or (:/ #\0 #\9)
+                   (:/ #\a #\f)
+                   (:/ #\A #\F))]
   [string     (:: #\" (:* (:~ #\" #\\)
                           (:: #\\ #\\)
                           (:: #\\ #\")
@@ -111,7 +114,7 @@
    ["<>" 'NOT-EQUAL]
    ["≠" 'NOT-EQUAL]
    [string 
-    (token-STRING (read (open-input-string lexeme)))]
+    (token-STRING (string-lexeme->string lexeme))] ; compatible with Racket string literals
    [identifier 
     (token-IDENTIFIER (string->symbol (regexp-replace* #rx"_" lexeme "-")))]
    [(:+ digit) (token-NUMBER (string->number lexeme))]
