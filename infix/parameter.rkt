@@ -1,7 +1,7 @@
-#lang scheme
+#lang racket/base
 (provide #%infix)
-
-(require scheme/stxparam)
+(require racket/stxparam
+         (for-syntax racket/base))
 (define-syntax-parameter #%infix
   (λ (stx)
     (syntax-case stx ()

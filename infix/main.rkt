@@ -1,4 +1,4 @@
-#lang at-exp racket
+#lang at-exp racket/base
 ;; This is not in the use for the moment.
 (provide $ $quote $quote-syntax #%infix)
 
