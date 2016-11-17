@@ -1,6 +1,8 @@
-#lang racket
+#lang racket/base
 (require "parameter.rkt"
-         "parse-string-lexeme.rkt")
+         "parse-string-lexeme.rkt"
+         (for-syntax racket/base)
+         racket/list)
 
 ;;; NOTES: 
 ;;;   Changes from planet version:  ]] (CDB) Bug fixed

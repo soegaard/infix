@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 (provide string-lexeme->string)
 
 ;;; This file provides the function
