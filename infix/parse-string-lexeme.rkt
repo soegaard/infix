@@ -25,7 +25,7 @@
       (bitwise-and lo #x03ff))))
 
 (define (string-lexeme->string l)
-  (define n (string-length l))
+  (define n (sub1 (string-length l)))
   (define (substring4 i) (substring l i (+ i 4)))
   (define (substring3 i) (substring l i (+ i 3)))
   (define (substring2 i) (substring l i (+ i 2)))
@@ -122,7 +122,7 @@
        (error 'parse-u-unicode
               "illegal string literal - \\u incorrectly used")]))
   (define (parse-U-unicode i) '(implement-me))
-  (list->string (parse-string 0)))
+  (list->string (parse-string 1)))
 
 (module+ test
   (require rackunit)
