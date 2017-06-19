@@ -25,7 +25,7 @@
       (bitwise-and lo #x03ff))))
 
 (define (string-lexeme->string l)
-  (define n (string-length l))
+  (define n (sub1 (string-length l)))
   (define (substring4 i) (substring l i (+ i 4)))
   (define (substring3 i) (substring l i (+ i 3)))
   (define (substring2 i) (substring l i (+ i 2)))
@@ -122,11 +122,12 @@
        (error 'parse-u-unicode
               "illegal string literal - \\u incorrectly used")]))
   (define (parse-U-unicode i) '(implement-me))
-  (list->string (parse-string 0)))
+  (list->string (parse-string 1)))
 
 (module+ test
   (require rackunit)
   (define (control s) (read (open-input-string (string-append "\"" s "\""))))
+  (define (sl->s s) (string-lexeme->string (string-append "\"" s "\"")))
   (define plain-words '("" "a" "ab" "abc" "abcd" "abcde"))
   (define escapes     '("x\\ay" "x\\by" "x\\ty" "x\\ny" "x\\vy" "x\\fy" "x\\ry" "x\\ey"
                                 "x\\\"y" "x\\'y" "x\\\\ny"))
@@ -138,13 +139,13 @@
   (define suros      '("\u1\u2" "\u12\u34" "\u123\u456" "\u1234\u5678" "\u1234\u123455"))
   (define unis2      '("\U1" "\U12" "\U123" "\U1234" "\U12345" "\U100000"))
   (define others     '("a\\\'b" "a\\\"b" "a\\\\b"))
-  (check-equal? (map string-lexeme->string plain-words) plain-words)
-  (check-equal? (map string-lexeme->string escapes)     (map control escapes))
-  (check-equal? (map string-lexeme->string octals)      (map control octals))
-  (check-equal? (map string-lexeme->string hexes)       (map control hexes))
-  (check-equal? (map string-lexeme->string unis)        (map control unis))
-  (check-equal? (map string-lexeme->string suros)       (map control suros))
-  (check-equal? (map string-lexeme->string unis2)       (map control unis2))
-  (check-equal? (map string-lexeme->string others)      (map control others)))
+  (check-equal? (map sl->s plain-words) (map control plain-words))
+  (check-equal? (map sl->s escapes)     (map control escapes))
+  (check-equal? (map sl->s octals)      (map control octals))
+  (check-equal? (map sl->s hexes)       (map control hexes))
+  (check-equal? (map sl->s unis)        (map control unis))
+  (check-equal? (map sl->s suros)       (map control suros))
+  (check-equal? (map sl->s unis2)       (map control unis2))
+  (check-equal? (map sl->s others)      (map control others)))
 
  
