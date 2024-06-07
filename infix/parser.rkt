@@ -26,6 +26,7 @@
 ; <id>   An identifier begins with a letter, 
 ;        and is optionally followed by series of letters, digits or underscores.
 ;        An underscore is converted to a -. Thus list_ref will refer to list-ref.
+;        OR an quoted identifier of the form |letter...|.
 
 ; <num>  A number is an non-empty series of digits, 
 ;        optionally followed by a period followed by a series of digits.
@@ -83,7 +84,8 @@
                           (:: #\\ #\u (:** 1 4 hdigit))
                           (:: #\\ #\U (:** 1 8 hdigit)))
                   #\")]
-  [identifier (:: letter (:* (:or letter digit #\_ #\?)))])
+  [identifier (:or (:: letter (:* (:or letter digit #\_ #\?)))
+                   (:: #\| (:* (:~ #\|)) #\|))])
 
 (define expression-lexer
   (lexer-src-pos
@@ -115,8 +117,15 @@
    ["≠" 'NOT-EQUAL]
    [string 
     (token-STRING (string-lexeme->string lexeme))] ; compatible with Racket string literals
-   [identifier 
-    (token-IDENTIFIER (string->symbol (regexp-replace* #rx"_" lexeme "-")))]
+   [identifier
+    (let ()
+      (displayln lexeme)
+    (cond
+      [(char=? (string-ref lexeme 0) #\|) ; quoted identifier |id|
+       (define l (substring lexeme 1 (- (string-length lexeme) 1)))
+       (token-IDENTIFIER (string->symbol l))]
+      [else
+       (token-IDENTIFIER (string->symbol (regexp-replace* #rx"_" lexeme "-")))]))]
    [(:+ digit) (token-NUMBER (string->number lexeme))]
    [(:: (:+ digit) #\. (:* digit)) (token-NUMBER (string->number lexeme))]))
 
