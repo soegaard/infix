@@ -29,6 +29,7 @@
 ;        underscores.
 ;        An underscore is read as a hyphen. 
 ;        Thus list_ref will refer to list-ref.
+;        OR |<non-pipe-character>*| 
 
 ; <ids>  A, possible empty, list of identifiers separated by white space.
 
