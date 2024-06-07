@@ -1,6 +1,8 @@
-#lang racket
+#lang racket/base
 (require "parameter.rkt"
-         "parse-string-lexeme.rkt")
+         "parse-string-lexeme.rkt"
+         (for-syntax racket/base)
+         racket/list)
 
 ;;; NOTES: 
 ;;;   Changes from planet version:  ]] (CDB) Bug fixed
@@ -162,9 +164,12 @@
                           ; position and line numbers count from 1                          
                           ; column numbers count from 0
                           (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
-                                (if o (+ (syntax-line o)     (position-line   start-pos)   -1) #f)
-                                (if o (+ (syntax-column o)   (position-offset start-pos)     ) #f)
-                                (if o (+ (syntax-position o) (position-offset start-pos)     ) #f)
+                                (and (syntax? o) (syntax-line o)
+                                     (+ (syntax-line o)     (position-line   start-pos)   -1))
+                                (and (syntax? o) (syntax-column o)
+                                     (+ (syntax-column o)   (position-offset start-pos)     ))
+                                (and (syntax? o) (syntax-position o)
+                                     (+ (syntax-position o) (position-offset start-pos)     ))
                                 ; span:
                                 (- (position-offset end-pos) (position-offset start-pos)))
                           o o))))))
@@ -225,9 +230,12 @@
                     (newline)
                     "internal error in package 'infix' - please file bug report"))
               (list (if (syntax? o) (syntax-source o) 'missing-in-action--sorry)
-                    (if o (+ (syntax-line o)     (position-line start) -1) #f)
-                    (if o (+ (syntax-column o)   (position-offset start))  #f)
-                    (if o (+ (syntax-position o) (position-offset start))  #f)
+                    (and (syntax? o) (syntax-line o)
+                         (+ (syntax-line o)     (position-line start) -1))
+                    (and (syntax? o) (syntax-column o)
+                         (+ (syntax-column o)   (position-offset start)))
+                    (and (syntax? o) (syntax-position o)
+                         (+ (syntax-position o) (position-offset start)))
                     (- (position-offset end)
                        (position-offset start)))))))
    

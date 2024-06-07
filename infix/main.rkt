@@ -1,4 +1,4 @@
-#lang at-exp racket
+#lang at-exp racket/base
 ;; This is not in the use for the moment.
 (provide $ $quote $quote-syntax #%infix)
 
@@ -59,8 +59,10 @@
        ;(display "stx: ") (display stx) (newline)
        (port-count-lines! ip)
        (let* ([line (syntax-line #'str)]
-              [col  (+ (syntax-column   #'str) offset   )]   ; counts from 0
-              [pos  (+ (syntax-position #'str) offset -1)])  ; counts from 1
+              [col  (and (syntax-column #'str)
+                         (+ (syntax-column   #'str) offset   ))]   ; counts from 0
+              [pos  (and (syntax-position #'str)
+                         (+ (syntax-position #'str) offset -1))])  ; counts from 1
          ;(display (list '$$ line col pos)) (newline)
          ; The string str has the position of the first "
          ; We need to skip this.
@@ -85,7 +87,8 @@
                       ;                  is ignored by datum->syntax
                       (list (syntax-source #'str)
                                         (syntax-line #'str)
-                                        (+ (syntax-column #'str) -1)
+                                        (and (syntax-column #'str)
+                                             (+ (syntax-column #'str) -1))
                                         (syntax-position #'str)
                                         (syntax-span #'str))
                       #'str))

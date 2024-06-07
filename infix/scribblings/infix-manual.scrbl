@@ -8,7 +8,7 @@
            infix)
           "util.rkt")
 
-@title[#:tag "top"]{@bold{Infix Expressions} for Racket}
+@title[#:tag "top"]{Infix Expressions for Racket}
 @author[(author+email "Jens Axel Søgaard" "jensaxel@soegaard.net")]
 
 @defmodule[infix]{
