@@ -120,14 +120,12 @@
    [string 
     (token-STRING (string-lexeme->string lexeme))] ; compatible with Racket string literals
    [identifier
-    (let ()
-      (displayln lexeme)
     (cond
       [(char=? (string-ref lexeme 0) #\|) ; quoted identifier |id|
        (define l (substring lexeme 1 (- (string-length lexeme) 1)))
        (token-IDENTIFIER (string->symbol l))]
       [else
-       (token-IDENTIFIER (string->symbol (regexp-replace* #rx"_" lexeme "-")))]))]
+       (token-IDENTIFIER (string->symbol (regexp-replace* #rx"_" lexeme "-")))])]
    [(:+ digit) (token-NUMBER (string->number lexeme))]
    [(:: (:+ digit) #\. (:* digit)) (token-NUMBER (string->number lexeme))]))
 

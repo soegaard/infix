@@ -222,3 +222,10 @@
 (test-case
  "strings"
  (check-equal? @${"foo"} "foo"))
+
+(test-case
+ "quoted identifier"
+  (let ()
+    (define foo*      42)
+    (define |foo / 2| 21)
+    (check-equal? @${|foo*|+|foo / 2|} 63)))
