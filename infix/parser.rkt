@@ -208,7 +208,7 @@
             ; token was received. The second and third arguments will be the name and the value 
             ; of the token at which the error was detected. 
             ; The fourth and fifth arguments, if present, provide the source positions of that
-            (unless #f #; (string? (syntax->datum o))
+            #;(unless  #; (string? (syntax->datum o))
               (display "DEBUG: ")
               (display (list o token-ok? name val start end))
               (display-position-token start) (newline)
